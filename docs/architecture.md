@@ -11,18 +11,19 @@
 ├── docker/postgres/
 │   ├── Dockerfile                  # PostgreSQL 17 + PGroonga + Apache AGE
 │   └── init/
-│       ├── 001-schema.sql          # 拡張、PAT、業務規程、インデックス、グラフ
-│       └── 002-demo.sql            # 架空の青空運送の規程と関係
+│       ├── 001-schema.sql          # 拡張、PAT、知識項目、関係、インデックス、グラフ
+│       └── 002-demo.sql            # 架空の青空運送の知識項目と関係
+├── demo/scenario.json              # 読みやすいシナリオ原本（全データは架空）
 ├── src/main/java/com/example/transportrag/
 │   ├── TransportRagApplication.java
 │   ├── auth/                      # PATのハッシュ照合、有効期限・失効確認
 │   ├── config/                    # Spring Security設定
-│   ├── mcp/                       # MCPツールの追加先（現時点はパッケージ定義）
-│   └── search/                    # 検索サービス・Mapper追加先（同上）
+│   ├── mcp/                       # 3つのMCP知識検索ツール
+│   └── search/                    # 検索サービス、モデル、Mapper
 ├── src/main/resources/
 │   ├── application.yml
-│   └── mappers/auth/PatMapper.xml  # MapperのSQLはXMLに記述
-├── src/test/java/com/example/transportrag/auth/
+│   └── mappers/                   # MapperのSQLはすべてXMLに記述
+├── src/test/java/com/example/transportrag/
 ├── scripts/
 │   ├── create-pat.ps1              # PAT発行、90日有効
 │   └── verify-db.sql               # 拡張と3種類の検索の確認
@@ -35,14 +36,25 @@
 `@Select`、`@Insert`などSQLアノテーションは使用禁止。Lombokも使用禁止。
 コンストラクタやアクセサはJavaで明示的に実装する。
 
-- 属性検索：`business_rules` の `category`、`region`、`effective_from` を使う。
-- 全文検索：PGroongaで日本語の `title`、`content` を検索する。
-- グラフ検索：AGEの `transport_rules` 内で `Rule` ノードと `EXTENDS` / `RELATED_TO` の関係を検索する。`rule_id` で業務規程と対応させる。
-- MCP層は検索サービスを呼び、根拠となる規程IDと本文を返す。SQLやCypherの自由入力は公開しない。
+- 属性検索：`knowledge_items` の種別、地域、状態、有効期間を使う。
+- 全文検索：PGroongaで日本語のタイトル、本文、別名を検索する。
+- 関係探索：`knowledge_relations` を再帰検索し、規程から担当組織・工程・サービス・ニーズ・KPI・市場仮説へ移動する。同じ関係をApache AGEの`business_knowledge`にも格納し、DB検証でCypher検索を確認する。
+- MCP層は検索サービスを呼び、コード、出典、有効期間、主管組織を返す。SQLやCypherの自由入力は公開しない。
 
-今回は初期セットアップとして認証・DB・データ・SSE設定までを実装した。
-検索SQLのサンプルはあるが、検索サービスとMCP検索ツールの実装、検索結果の統合は後続開発とする。
+関係探索は有向関係を双方向にたどる。定義と逆向きにたどった結果は関係名へ`INVERSE_`を付け、元の意味を失わないようにする。
+
+MCPには`search_business_knowledge`、`get_business_knowledge`、`explore_business_relationships`を公開する。
+検索結果を統合して文章を生成する処理は呼び出し元エージェントが担う。
 LLMによる回答生成は呼び出し元エージェントが担い、この初期構成にLLM APIキーは不要。
+
+## デモシナリオ
+
+架空の青空運送が、北海道向け冷蔵配送の品質改善と共同配送による収益・現場負荷の改善を検討するシナリオである。
+コード体系、用語集、組織構造、業務フロー、商品・サービス、荷主、規程、経営・取引先・現場ニーズ、KPI、業界・競合動向を含む。
+業界・競合動向は事実情報ではなく、意思決定の検索デモ用に作った観測・仮説である。
+
+状態は`APPROVED`（確定情報）、`PROPOSED`（ニーズ・提案）、`OBSERVATION`（外部環境の仮説）、`RETIRED`（廃止）を区別する。
+有効期間検索により、旧POD規程と2026年4月以降の現行規程を基準日ごとに分離できる。
 
 ## 認証
 

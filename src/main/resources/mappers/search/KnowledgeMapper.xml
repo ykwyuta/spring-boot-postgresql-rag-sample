@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.transportrag.search.KnowledgeMapper">
+  <sql id="itemColumns">
+    code, kind, title, content, owner_code, region, aliases, status,
+    valid_from, valid_to, source_uri
+  </sql>
+
+  <select id="findByCode" resultType="com.example.transportrag.search.KnowledgeItem">
+    SELECT <include refid="itemColumns"/>
+    FROM public.knowledge_items
+    WHERE code = #{code}
+      AND valid_from &lt;= #{asOf}
+      AND (valid_to IS NULL OR valid_to &gt; #{asOf})
+  </select>
+
+  <select id="search" resultType="com.example.transportrag.search.KnowledgeItem">
+    SELECT <include refid="itemColumns"/>
+    FROM public.knowledge_items
+    WHERE valid_from &lt;= #{asOf}
+      AND (valid_to IS NULL OR valid_to &gt; #{asOf})
+    <if test="query != null and query != ''">
+      AND (title &amp;@ #{query} OR content &amp;@ #{query} OR aliases &amp;@ #{query} OR code = upper(#{query}))
+    </if>
+    <if test="kind != null and kind != ''">
+      AND kind = #{kind}
+    </if>
+    <if test="region != null and region != ''">
+      AND region IN (#{region}, '全国')
+    </if>
+    <if test="status != null and status != ''">
+      AND status = #{status}
+    </if>
+    ORDER BY
+      CASE WHEN code = upper(#{query}) THEN 0 ELSE 1 END,
+      kind, code
+    LIMIT #{limit}
+  </select>
+
+  <select id="findRelated" resultType="com.example.transportrag.search.KnowledgeRelation">
+    WITH RECURSIVE graph AS (
+      SELECT 1 AS depth, #{code}::varchar AS from_code,
+             CASE WHEN r.source_code = #{code} THEN r.relation ELSE 'INVERSE_' || r.relation END AS relation,
+             CASE WHEN r.source_code = #{code} THEN r.target_code ELSE r.source_code END AS to_code,
+             r.rationale,
+             ARRAY[#{code}::varchar,
+                   CASE WHEN r.source_code = #{code} THEN r.target_code ELSE r.source_code END]::varchar[] AS path
+      FROM public.knowledge_relations r
+      WHERE r.source_code = #{code} OR r.target_code = #{code}
+      UNION ALL
+      SELECT g.depth + 1,
+             g.to_code,
+             CASE WHEN r.source_code = g.to_code THEN r.relation ELSE 'INVERSE_' || r.relation END,
+             CASE WHEN r.source_code = g.to_code THEN r.target_code ELSE r.source_code END,
+             r.rationale,
+             g.path || CASE WHEN r.source_code = g.to_code THEN r.target_code ELSE r.source_code END
+      FROM graph g
+      JOIN public.knowledge_relations r
+        ON (r.source_code = g.to_code OR r.target_code = g.to_code)
+      WHERE g.depth &lt; #{depth}
+        AND NOT (CASE WHEN r.source_code = g.to_code THEN r.target_code ELSE r.source_code END = ANY(g.path))
+    )
+    SELECT g.depth, g.from_code, g.relation, g.to_code, g.rationale, i.title, i.kind
+    FROM graph g
+    JOIN public.knowledge_items i ON i.code = g.to_code
+    WHERE i.valid_from &lt;= #{asOf}
+      AND (i.valid_to IS NULL OR i.valid_to &gt; #{asOf})
+    ORDER BY g.depth, g.relation, g.to_code
+    LIMIT #{limit}
+  </select>
+</mapper>

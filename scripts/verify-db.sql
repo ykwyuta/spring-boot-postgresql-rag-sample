@@ -1,10 +1,21 @@
 \set ON_ERROR_STOP on
 SELECT extname, extversion FROM pg_extension WHERE extname IN ('age', 'pgroonga');
-SELECT id, title FROM public.business_rules WHERE category = '配送' AND region = '北海道';
-SELECT id, title FROM public.business_rules WHERE content &@ '冷蔵';
+SELECT kind, count(*) FROM public.knowledge_items GROUP BY kind ORDER BY kind;
+SELECT code, title FROM public.knowledge_items
+WHERE kind = 'RULE' AND region IN ('北海道', '全国') AND status = 'APPROVED';
+SELECT code, title FROM public.knowledge_items
+WHERE title &@ '冷蔵' OR content &@ '冷蔵' OR aliases &@ '冷蔵';
+WITH RECURSIVE related AS (
+  SELECT 1 AS depth, target_code AS code FROM public.knowledge_relations WHERE source_code = 'NEED-MARGIN'
+  UNION ALL
+  SELECT r.depth + 1, l.target_code
+  FROM related r JOIN public.knowledge_relations l ON l.source_code = r.code
+  WHERE r.depth < 2
+)
+SELECT depth, code FROM related ORDER BY depth, code;
 LOAD 'age';
 SET search_path = ag_catalog, public;
-SELECT * FROM cypher('transport_rules', $$
-  MATCH (r:Rule)-[:EXTENDS]->(base:Rule)
-  RETURN r.rule_id, base.rule_id
-$$) AS (rule_id agtype, base_rule_id agtype);
+SELECT * FROM cypher('business_knowledge', $$
+  MATCH (need:Knowledge {code: 'NEED-MARGIN'})-[relation]->(related:Knowledge)
+  RETURN type(relation), related.code
+$$) AS (relation agtype, related_code agtype);

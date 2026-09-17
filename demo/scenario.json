@@ -1,0 +1,1409 @@
+{
+  "description": "青空運送の架空シナリオ。市場・競合・数値を含め全てデモ設定。",
+  "items": [
+    {
+      "code": "CODE-001",
+      "kind": "CODE",
+      "title": "青空運送のコード体系",
+      "content": "識別子は種別接頭辞とハイフンと英大文字・数字で構成する。ORGは組織、TERMは用語、FLOWは工程、SVCはサービス、CUSTは荷主、RULEは規程、NEEDはニーズ、KPIは指標、INDは業界観測、COMPは競合観測。識別子は再利用せず改訂時も出典と有効期間を保持する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "コード体系 識別子 マスタ",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/CODE-001"
+    },
+    {
+      "code": "CODE-002",
+      "kind": "CODE",
+      "title": "荷物・便・温度帯のコード",
+      "content": "荷物番号はAZと受付日8桁と連番6桁。便番号はLNと拠点対と出発日。温度帯AMBは常温、CHLは冷蔵2〜8度、FRZは冷凍マイナス18度以下。SVC-COLDはCHLのみを扱い、冷凍を混載しない。",
+      "ownerCode": "ORG-OPS",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/CODE-002"
+    },
+    {
+      "code": "CODE-003",
+      "kind": "CODE",
+      "title": "例外と配送状態のコード",
+      "content": "状態はRECEIVED→PLANNED→PICKED_UP→IN_TRANSIT→DELIVERED。例外TEMPは温度逸脱、SNOWは雪害、ABSENTは不在、DAMAGEは破損。例外発生時は自動的な配送完了にせず責任者の判断を記録する。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/CODE-003"
+    },
+    {
+      "code": "TERM-OTIF",
+      "kind": "TERM",
+      "title": "納期内・全量納品率",
+      "content": "約束日時までに欠品なく納品した件数を対象納品件数で割る。顧客合意の納期変更を分母から除外しない。遅延と欠品の重複は1件として数える。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "納期遵守 完納率",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/TERM-OTIF"
+    },
+    {
+      "code": "TERM-POD",
+      "kind": "TERM",
+      "title": "配達完了証跡",
+      "content": "受領者名・受領時刻・荷物番号を記録した電子受領証。冷蔵配送では引渡温度も関連付ける。写真は同意を得て取得し閲覧権限を限定する。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "電子受領証 配達証明",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/TERM-POD"
+    },
+    {
+      "code": "TERM-CROSSDOCK",
+      "kind": "TERM",
+      "title": "クロスドック",
+      "content": "入荷貨物を長期保管せず仕分けして別便へ積み替える方式。冷蔵品は保冷ヤードを使い、待機が30分を超えたら品質管理室へ連絡する。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "積替え 中継",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/TERM-CROSSDOCK"
+    },
+    {
+      "code": "TERM-LOADFACTOR",
+      "kind": "TERM",
+      "title": "積載率",
+      "content": "利用可能な重量容量に対する実積載重量の割合。容積制約も併記し、重量だけで共同配送の可否を判断しない。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "積載効率",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/TERM-LOADFACTOR"
+    },
+    {
+      "code": "TERM-COLDCHAIN",
+      "kind": "TERM",
+      "title": "コールドチェーン",
+      "content": "集荷から引渡しまで温度条件を継続して維持する仕組み。逸脱は荷主への通知と隔離判断を伴う。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "低温物流 冷蔵 温度管理",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/TERM-COLDCHAIN"
+    },
+    {
+      "code": "TERM-SLA",
+      "kind": "TERM",
+      "title": "サービス水準合意",
+      "content": "納期・温度帯・通知期限・証跡提供時間を荷主と合意した契約条件。標準規程より厳しい条件は営業と品質管理室の承認が必要。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "サービスレベル 合意水準",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/TERM-SLA"
+    },
+    {
+      "code": "ORG-HQ",
+      "kind": "ORG",
+      "title": "本社",
+      "content": "経営方針と投資配分を決定する。営業本部、運行本部、品質管理室、経営企画室を統括する。",
+      "ownerCode": "ORG-HQ",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-HQ"
+    },
+    {
+      "code": "ORG-STRATEGY",
+      "kind": "ORG",
+      "title": "経営企画室",
+      "content": "地域別の利益率・積載率・品質コストを月次集計する。共同配送への投資と試行継続を経営会議へ提案する。",
+      "ownerCode": "ORG-HQ",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-STRATEGY"
+    },
+    {
+      "code": "ORG-SALES",
+      "kind": "ORG",
+      "title": "営業本部",
+      "content": "荷主のSLAを契約へ落とし込み、追加料金・例外通知先・納期変更を合意する。現場判断での無償特急化は承認しない。",
+      "ownerCode": "ORG-HQ",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-SALES"
+    },
+    {
+      "code": "ORG-OPS",
+      "kind": "ORG",
+      "title": "運行本部",
+      "content": "配車・中継・配送の標準手順を所管し拠点間の応援を調整する。品質判断の権限は品質管理室に残す。",
+      "ownerCode": "ORG-HQ",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-OPS"
+    },
+    {
+      "code": "ORG-QUALITY",
+      "kind": "ORG",
+      "title": "品質管理室",
+      "content": "温度逸脱時の隔離と出荷再開を判定する。荷主との安全確認が完了するまで再配送を承認しない。",
+      "ownerCode": "ORG-HQ",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-QUALITY"
+    },
+    {
+      "code": "ORG-SAPPORO",
+      "kind": "ORG",
+      "title": "札幌センター",
+      "content": "北海道内の配送と雪害時の代替便を運行本部に提案する。前日16時に翌日遅延の見込みを共有する。",
+      "ownerCode": "ORG-HQ",
+      "region": "北海道",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-SAPPORO"
+    },
+    {
+      "code": "ORG-TOKYO",
+      "kind": "ORG",
+      "title": "東京ハブ",
+      "content": "関東荷主の集荷と北海道向け幹線積載を担当する。冷蔵品の引継ぎ温度と荷姿を照合する。",
+      "ownerCode": "ORG-HQ",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-TOKYO"
+    },
+    {
+      "code": "ORG-IT",
+      "kind": "ORG",
+      "title": "情報システム室",
+      "content": "配送イベント連携と電子PODの障害対応を担う。通信断時の端末保存データを復旧後に重複なく同期する。",
+      "ownerCode": "ORG-HQ",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/ORG-IT"
+    },
+    {
+      "code": "FLOW-RECEIVE",
+      "kind": "FLOW",
+      "title": "受注・SLA確認",
+      "content": "営業担当が荷主コード、温度帯、納期、通知先を確認し受注を確定する。不明な温度条件は受注を保留し品質管理室へ照会する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/FLOW-RECEIVE"
+    },
+    {
+      "code": "FLOW-PLAN",
+      "kind": "FLOW",
+      "title": "配車・便組成",
+      "content": "配車担当が重量・容積・運転時間・温度帯で便を組成する。雪害予測時は札幌センターへ確認し荷主合意後に予定を変更する。",
+      "ownerCode": "ORG-OPS",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/FLOW-PLAN"
+    },
+    {
+      "code": "FLOW-PICKUP",
+      "kind": "FLOW",
+      "title": "集荷・検品",
+      "content": "ドライバーが荷物コードと温度と荷姿を照合する。破損または2〜8度外の冷蔵品は積み込まず写真と温度を報告する。",
+      "ownerCode": "ORG-TOKYO",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/FLOW-PICKUP"
+    },
+    {
+      "code": "FLOW-TRANSFER",
+      "kind": "FLOW",
+      "title": "幹線輸送・中継",
+      "content": "東京ハブから札幌センターへ幹線輸送し、中継時に封印番号・温度履歴を引き継ぐ。冷蔵ヤード待機30分超は品質管理室へ報告する。",
+      "ownerCode": "ORG-OPS",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/FLOW-TRANSFER"
+    },
+    {
+      "code": "FLOW-DELIVER",
+      "kind": "FLOW",
+      "title": "納品・POD登録",
+      "content": "受領者と数量を照合しPODを登録する。通信断では端末内に保存し、復旧後に同期する。温度逸脱があれば納品を止め隔離する。",
+      "ownerCode": "ORG-SAPPORO",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/FLOW-DELIVER"
+    },
+    {
+      "code": "FLOW-EXCEPTION",
+      "kind": "FLOW",
+      "title": "例外・荷主通知",
+      "content": "現場が例外コードを登録し配車担当へ即時連絡する。品質管理室が温度逸脱品を判定し、営業は検知後30分以内に荷主へ第一報を行う。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/FLOW-EXCEPTION"
+    },
+    {
+      "code": "FLOW-BILLING",
+      "kind": "FLOW",
+      "title": "請求・品質振り返り",
+      "content": "営業が契約料金と追加費用の承認証跡を照合する。経営企画室が週次で遅延原因・温度逸脱・再配達コストを振り返る。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/FLOW-BILLING"
+    },
+    {
+      "code": "SVC-STANDARD",
+      "kind": "SERVICE",
+      "title": "あおぞら標準便",
+      "content": "常温の法人向け混載配送。15時受付締切、翌営業日出荷。離島と冬季北海道は追加日数を見積もり時に提示する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "常温 混載",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/SVC-STANDARD"
+    },
+    {
+      "code": "SVC-COLD",
+      "kind": "SERVICE",
+      "title": "あおぞらチルド便",
+      "content": "法人向け冷蔵食品配送。2〜8度を維持し、集荷・中継・納品の温度を記録する。冷凍品・医薬品は対象外。納品後2時間以内にPODを提供する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "冷蔵 コールドチェーン チルド",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/SVC-COLD"
+    },
+    {
+      "code": "SVC-JOINT",
+      "kind": "SERVICE",
+      "title": "地域共同配送",
+      "content": "複数荷主の納品先と時間帯を束ねるサービス。温度帯・荷姿・荷主の混載同意が一致した場合のみ組成する。2026年度は北海道と関東で試行する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "共同物流 積載率",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/SVC-JOINT"
+    },
+    {
+      "code": "SVC-VISIBILITY",
+      "kind": "SERVICE",
+      "title": "配送可視化オプション",
+      "content": "配送状態、到着見込み、温度例外、電子PODを荷主へ共有する。位置情報の公開対象は担当荷主の貨物に限定する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "追跡 トラッキング POD",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/SVC-VISIBILITY"
+    },
+    {
+      "code": "CUST-FOOD",
+      "kind": "PARTNER",
+      "title": "北星フーズ",
+      "content": "架空の北海道食品メーカー。首都圏への乳製品出荷と札幌小売店への補充配送を依頼する。冷蔵2〜8度と店舗午前納品を契約条件とする。",
+      "ownerCode": "ORG-SALES",
+      "region": "北海道",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/CUST-FOOD"
+    },
+    {
+      "code": "CUST-RETAIL",
+      "kind": "PARTNER",
+      "title": "みらいマート",
+      "content": "架空の小売チェーン。店舗の荷受け人員が少ないため配送時刻の分散とPODの早期提供を求める。予約枠を超える納品は店舗と再調整する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/CUST-RETAIL"
+    },
+    {
+      "code": "CUST-PARTS",
+      "kind": "PARTNER",
+      "title": "東都精機",
+      "content": "架空の部品メーカー。常温部品を関東工場へ定時配送する。緊急便は費用の事前承認と追跡情報を必要とする。",
+      "ownerCode": "ORG-SALES",
+      "region": "関東",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/CUST-PARTS"
+    },
+    {
+      "code": "RULE-001",
+      "kind": "RULE",
+      "title": "通常配送の受付締切",
+      "content": "通常配送は営業日15時までの受付で翌営業日に出荷する。離島の到着日は個別見積もりとし翌日到着を保証しない。",
+      "ownerCode": "ORG-OPS",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/RULE-001"
+    },
+    {
+      "code": "RULE-002",
+      "kind": "RULE",
+      "title": "冷蔵品の温度管理",
+      "content": "冷蔵品は2〜8度で輸送する。集荷・中継・引渡時の温度を記録し、逸脱時は隔離して品質管理室へ連絡する。荷主確認前に再配送しない。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/RULE-002"
+    },
+    {
+      "code": "RULE-003",
+      "kind": "RULE",
+      "title": "北海道の冬季配送",
+      "content": "12月から3月の北海道は通常予定に2営業日を追加する。雪害予測時は札幌センターが前日16時に見込みを連絡し、営業が荷主と納期を再合意する。",
+      "ownerCode": "ORG-SAPPORO",
+      "region": "北海道",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/RULE-003"
+    },
+    {
+      "code": "RULE-004",
+      "kind": "RULE",
+      "title": "例外の第一報と判断権限",
+      "content": "温度逸脱は検知後30分以内に営業から荷主へ第一報する。出荷再開は品質管理室が荷主と確認して承認し、現場単独では判断しない。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/RULE-004"
+    },
+    {
+      "code": "RULE-005",
+      "kind": "RULE",
+      "title": "共同配送の混載条件",
+      "content": "荷主の書面同意・同一温度帯・汚染リスクのない荷姿が条件。未承認の食品と化学品の混載を禁止する。低積載でも条件を省略しない。",
+      "ownerCode": "ORG-OPS",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/RULE-005"
+    },
+    {
+      "code": "RULE-006",
+      "kind": "RULE",
+      "title": "PODの提供期限",
+      "content": "冷蔵便は納品後2時間以内に電子PODを荷主へ提供する。通信断時は営業へ第一報し、端末保存から復旧後に同期する。",
+      "ownerCode": "ORG-IT",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-04-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/RULE-006"
+    },
+    {
+      "code": "RULE-007",
+      "kind": "RULE",
+      "title": "追加費用の承認",
+      "content": "特急便と待機料は営業が荷主へ事前提示して承認番号を記録する。雪害迂回費用も自動請求せず契約を確認する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/RULE-007"
+    },
+    {
+      "code": "RULE-008",
+      "kind": "RULE",
+      "title": "旧POD翌営業日提供",
+      "content": "旧手順はPODを翌営業日までに提供していた。2026年4月1日以降はRULE-006を参照する。",
+      "ownerCode": "ORG-IT",
+      "region": "全国",
+      "aliases": "旧規程",
+      "status": "RETIRED",
+      "validFrom": "2025-01-01",
+      "validTo": "2026-04-01",
+      "source": "demo://aozora/2026/RULE-008"
+    },
+    {
+      "code": "NEED-MARGIN",
+      "kind": "MANAGEMENT_NEED",
+      "title": "低温配送の利益率改善",
+      "content": "経営会議の架空目標：冷蔵便営業利益率を2026年度末までに5%から8%へ改善する。安全基準を維持し、積載率向上と再配送削減を先に試行する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-MARGIN"
+    },
+    {
+      "code": "NEED-QUALITY",
+      "kind": "MANAGEMENT_NEED",
+      "title": "品質と収益の両立",
+      "content": "月次の温度逸脱率を0.8%から0.3%以下へ改善する。品質管理室が原因別件数、営業が補償費、経営企画室が利益への影響を確認する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-QUALITY"
+    },
+    {
+      "code": "NEED-CAPACITY",
+      "kind": "MANAGEMENT_NEED",
+      "title": "繁忙期の輸送力確保",
+      "content": "冬季の予備車両と協力会社枠を確保し、無理な配車を避ける。共同配送の継続判断は利益だけでなく待機時間と品質を含める。",
+      "ownerCode": "ORG-OPS",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-CAPACITY"
+    },
+    {
+      "code": "NEED-FRESH",
+      "kind": "CUSTOMER_NEED",
+      "title": "北星フーズの鮮度・午前納品",
+      "content": "北星フーズは冷蔵2〜8度、店舗午前納品、温度履歴の提出を求める。雪害時も無断で納期変更せず代替日と影響数量を30分以内の第一報後に協議する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-FRESH"
+    },
+    {
+      "code": "NEED-POD",
+      "kind": "CUSTOMER_NEED",
+      "title": "みらいマートの検収省力化",
+      "content": "みらいマートはPODを納品後2時間以内に受領し、荷物番号で発注データと照合したい。荷受けの集中を避けるため予約枠の分散も要求する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-POD"
+    },
+    {
+      "code": "NEED-TRACE",
+      "kind": "CUSTOMER_NEED",
+      "title": "東都精機の緊急便可視化",
+      "content": "東都精機は生産停止を避けるため到着見込みと遅延通知を求める。特急料金の承認者が不在なら標準便からの切替を保留する。",
+      "ownerCode": "ORG-SALES",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-TRACE"
+    },
+    {
+      "code": "NEED-OFFLINE",
+      "kind": "FIELD_NEED",
+      "title": "通信断でも検品・PODを記録",
+      "content": "札幌センターの現場は通信不安定区間で温度と受領証を端末保存したい。同期時の二重登録を荷物番号とイベントIDで防止する。",
+      "ownerCode": "ORG-SAPPORO",
+      "region": "北海道",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-OFFLINE"
+    },
+    {
+      "code": "NEED-WAIT",
+      "kind": "FIELD_NEED",
+      "title": "待機と二重入力の削減",
+      "content": "ドライバーは店舗待機を1納品平均45分から20分以内へ減らしたい。予約枠共有と荷物コードのスキャンで事務所への再入力をなくす。",
+      "ownerCode": "ORG-OPS",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-WAIT"
+    },
+    {
+      "code": "NEED-AUTHORITY",
+      "kind": "FIELD_NEED",
+      "title": "温度逸脱の判断先を明確化",
+      "content": "現場は温度逸脱時に誰へ連絡し、誰が再開を承認するかを知りたい。経営の利益目標より隔離と荷主確認を優先する。",
+      "ownerCode": "ORG-QUALITY",
+      "region": "全国",
+      "aliases": "",
+      "status": "PROPOSED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/NEED-AUTHORITY"
+    },
+    {
+      "code": "KPI-MARGIN",
+      "kind": "KPI",
+      "title": "冷蔵便営業利益率",
+      "content": "冷蔵便の営業利益÷冷蔵便売上。目標8%、架空基準値5%。経営企画室が月次集計し、補償費と再配送費を含める。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/KPI-MARGIN"
+    },
+    {
+      "code": "KPI-OTIF",
+      "kind": "KPI",
+      "title": "店舗OTIF",
+      "content": "納期内・全量納品件数÷対象納品件数。目標98%、架空基準値94%。営業本部が荷主別・拠点別に週次確認する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/KPI-OTIF"
+    },
+    {
+      "code": "KPI-LOAD",
+      "kind": "KPI",
+      "title": "重量積載率",
+      "content": "実積載重量÷利用可能重量容量。目標75%、架空基準値60%。容積利用率と温度条件を併記する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/KPI-LOAD"
+    },
+    {
+      "code": "KPI-TEMP",
+      "kind": "KPI",
+      "title": "温度逸脱率",
+      "content": "温度逸脱のあった冷蔵配送件数÷冷蔵配送件数。目標0.3%以下、架空基準値0.8%。品質管理室が週次監視する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "",
+      "status": "APPROVED",
+      "validFrom": "2026-01-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/KPI-TEMP"
+    },
+    {
+      "code": "IND-CAPACITY",
+      "kind": "INDUSTRY",
+      "title": "輸送力制約のシナリオ",
+      "content": "架空の市場観測：繁忙期の協力会社枠が不足する想定。共同配送と荷主の納品時間調整で対応する。実際の法令や市場統計を示す情報ではない。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "業界動向 市場 仮説",
+      "status": "OBSERVATION",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/IND-CAPACITY"
+    },
+    {
+      "code": "IND-TRACE",
+      "kind": "INDUSTRY",
+      "title": "温度・配送証跡要求のシナリオ",
+      "content": "架空の市場観測：荷主が温度履歴と電子PODを重視する想定。配送可視化サービスへの投資仮説であり、受注増加を保証しない。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "業界動向 市場 仮説",
+      "status": "OBSERVATION",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/IND-TRACE"
+    },
+    {
+      "code": "IND-GREEN",
+      "kind": "INDUSTRY",
+      "title": "環境配慮調達のシナリオ",
+      "content": "架空の市場観測：荷主が空車回送削減と共同配送を評価する想定。排出量は計測条件を明示し、実測前に削減率を宣伝しない。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "業界動向 市場 仮説",
+      "status": "OBSERVATION",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/IND-GREEN"
+    },
+    {
+      "code": "COMP-SNOW",
+      "kind": "COMPETITOR",
+      "title": "白銀ロジの冬季配送",
+      "content": "架空の競合・白銀ロジは北海道の予備便と地場ネットワークを強みとする想定。価格は未調査。青空運送は温度証跡と荷主通知で差別化する仮説を立てる。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "北海道",
+      "aliases": "競合動向 比較 仮説",
+      "status": "OBSERVATION",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/COMP-SNOW"
+    },
+    {
+      "code": "COMP-DIGITAL",
+      "kind": "COMPETITOR",
+      "title": "ネクストカーゴの可視化",
+      "content": "架空の競合・ネクストカーゴは到着予測とPODポータルを提供する想定。公開デモ相当の仮説であり精度の比較は未検証。青空運送は通信断対応を試行する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "全国",
+      "aliases": "競合動向 比較 仮説",
+      "status": "OBSERVATION",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/COMP-DIGITAL"
+    },
+    {
+      "code": "COMP-JOINT",
+      "kind": "COMPETITOR",
+      "title": "つばさ共同便の混載",
+      "content": "架空の競合・つばさ共同便は地域共同配送による低価格を訴求する想定。収益性は不明。青空運送は混載条件を維持しながら積載率を検証する。",
+      "ownerCode": "ORG-STRATEGY",
+      "region": "関東",
+      "aliases": "競合動向 比較 仮説",
+      "status": "OBSERVATION",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "source": "demo://aozora/2026/COMP-JOINT"
+    }
+  ],
+  "links": [
+    {
+      "sourceCode": "CODE-001",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "CODE-002",
+      "targetCode": "ORG-OPS",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "CODE-003",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "TERM-OTIF",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "TERM-POD",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "TERM-CROSSDOCK",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "TERM-LOADFACTOR",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "TERM-COLDCHAIN",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "TERM-SLA",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "FLOW-RECEIVE",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "FLOW-PLAN",
+      "targetCode": "ORG-OPS",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "FLOW-PICKUP",
+      "targetCode": "ORG-TOKYO",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "FLOW-TRANSFER",
+      "targetCode": "ORG-OPS",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "FLOW-DELIVER",
+      "targetCode": "ORG-SAPPORO",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "FLOW-EXCEPTION",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "FLOW-BILLING",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "SVC-STANDARD",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "SVC-COLD",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "SVC-JOINT",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "SVC-VISIBILITY",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "CUST-FOOD",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "CUST-RETAIL",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "CUST-PARTS",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-001",
+      "targetCode": "ORG-OPS",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-002",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-003",
+      "targetCode": "ORG-SAPPORO",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-004",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-005",
+      "targetCode": "ORG-OPS",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-006",
+      "targetCode": "ORG-IT",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-007",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "RULE-008",
+      "targetCode": "ORG-IT",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-MARGIN",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-QUALITY",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-CAPACITY",
+      "targetCode": "ORG-OPS",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-FRESH",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-POD",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-TRACE",
+      "targetCode": "ORG-SALES",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-OFFLINE",
+      "targetCode": "ORG-SAPPORO",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-WAIT",
+      "targetCode": "ORG-OPS",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "NEED-AUTHORITY",
+      "targetCode": "ORG-QUALITY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "KPI-MARGIN",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "KPI-OTIF",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "KPI-LOAD",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "KPI-TEMP",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "IND-CAPACITY",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "IND-TRACE",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "IND-GREEN",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "COMP-SNOW",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "COMP-DIGITAL",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "COMP-JOINT",
+      "targetCode": "ORG-STRATEGY",
+      "relation": "OWNED_BY",
+      "rationale": "情報の主管・問い合わせ先"
+    },
+    {
+      "sourceCode": "ORG-STRATEGY",
+      "targetCode": "ORG-HQ",
+      "relation": "REPORTS_TO",
+      "rationale": "本社の機能組織"
+    },
+    {
+      "sourceCode": "ORG-SALES",
+      "targetCode": "ORG-HQ",
+      "relation": "REPORTS_TO",
+      "rationale": "本社の機能組織"
+    },
+    {
+      "sourceCode": "ORG-OPS",
+      "targetCode": "ORG-HQ",
+      "relation": "REPORTS_TO",
+      "rationale": "本社の機能組織"
+    },
+    {
+      "sourceCode": "ORG-QUALITY",
+      "targetCode": "ORG-HQ",
+      "relation": "REPORTS_TO",
+      "rationale": "本社の機能組織"
+    },
+    {
+      "sourceCode": "ORG-IT",
+      "targetCode": "ORG-HQ",
+      "relation": "REPORTS_TO",
+      "rationale": "本社の機能組織"
+    },
+    {
+      "sourceCode": "ORG-SAPPORO",
+      "targetCode": "ORG-OPS",
+      "relation": "REPORTS_TO",
+      "rationale": "運行本部が管轄する拠点"
+    },
+    {
+      "sourceCode": "ORG-TOKYO",
+      "targetCode": "ORG-OPS",
+      "relation": "REPORTS_TO",
+      "rationale": "運行本部が管轄する拠点"
+    },
+    {
+      "sourceCode": "FLOW-RECEIVE",
+      "targetCode": "FLOW-PLAN",
+      "relation": "NEXT",
+      "rationale": "通常配送の次工程"
+    },
+    {
+      "sourceCode": "FLOW-PLAN",
+      "targetCode": "FLOW-PICKUP",
+      "relation": "NEXT",
+      "rationale": "通常配送の次工程"
+    },
+    {
+      "sourceCode": "FLOW-PICKUP",
+      "targetCode": "FLOW-TRANSFER",
+      "relation": "NEXT",
+      "rationale": "通常配送の次工程"
+    },
+    {
+      "sourceCode": "FLOW-TRANSFER",
+      "targetCode": "FLOW-DELIVER",
+      "relation": "NEXT",
+      "rationale": "通常配送の次工程"
+    },
+    {
+      "sourceCode": "FLOW-DELIVER",
+      "targetCode": "FLOW-BILLING",
+      "relation": "NEXT",
+      "rationale": "通常配送の次工程"
+    },
+    {
+      "sourceCode": "FLOW-PICKUP",
+      "targetCode": "FLOW-EXCEPTION",
+      "relation": "ON_EXCEPTION",
+      "rationale": "温度逸脱・破損・遅延時の分岐"
+    },
+    {
+      "sourceCode": "FLOW-TRANSFER",
+      "targetCode": "FLOW-EXCEPTION",
+      "relation": "ON_EXCEPTION",
+      "rationale": "温度逸脱・破損・遅延時の分岐"
+    },
+    {
+      "sourceCode": "FLOW-DELIVER",
+      "targetCode": "FLOW-EXCEPTION",
+      "relation": "ON_EXCEPTION",
+      "rationale": "温度逸脱・破損・遅延時の分岐"
+    },
+    {
+      "sourceCode": "SVC-COLD",
+      "targetCode": "RULE-002",
+      "relation": "GOVERNED_BY",
+      "rationale": "冷蔵便の温度制約"
+    },
+    {
+      "sourceCode": "SVC-COLD",
+      "targetCode": "RULE-006",
+      "relation": "GOVERNED_BY",
+      "rationale": "冷蔵便の証跡期限"
+    },
+    {
+      "sourceCode": "SVC-STANDARD",
+      "targetCode": "RULE-001",
+      "relation": "GOVERNED_BY",
+      "rationale": "標準受付締切"
+    },
+    {
+      "sourceCode": "SVC-JOINT",
+      "targetCode": "RULE-005",
+      "relation": "GOVERNED_BY",
+      "rationale": "混載の承認条件"
+    },
+    {
+      "sourceCode": "RULE-003",
+      "targetCode": "RULE-001",
+      "relation": "EXTENDS",
+      "rationale": "冬季北海道の追加日数"
+    },
+    {
+      "sourceCode": "RULE-002",
+      "targetCode": "RULE-004",
+      "relation": "ESCALATES_TO",
+      "rationale": "温度逸脱時の連絡と権限"
+    },
+    {
+      "sourceCode": "RULE-006",
+      "targetCode": "RULE-008",
+      "relation": "SUPERSEDES",
+      "rationale": "2026年4月から提供期限を短縮"
+    },
+    {
+      "sourceCode": "FLOW-EXCEPTION",
+      "targetCode": "RULE-004",
+      "relation": "GOVERNED_BY",
+      "rationale": "第一報30分以内・再開承認"
+    },
+    {
+      "sourceCode": "FLOW-DELIVER",
+      "targetCode": "RULE-006",
+      "relation": "GOVERNED_BY",
+      "rationale": "納品後の証跡提供"
+    },
+    {
+      "sourceCode": "FLOW-PLAN",
+      "targetCode": "RULE-003",
+      "relation": "GOVERNED_BY",
+      "rationale": "冬季北海道の配車判断"
+    },
+    {
+      "sourceCode": "FLOW-PLAN",
+      "targetCode": "RULE-005",
+      "relation": "GOVERNED_BY",
+      "rationale": "混載の適合確認"
+    },
+    {
+      "sourceCode": "CUST-FOOD",
+      "targetCode": "NEED-FRESH",
+      "relation": "REQUESTS",
+      "rationale": "荷主の鮮度と納期要求"
+    },
+    {
+      "sourceCode": "CUST-RETAIL",
+      "targetCode": "NEED-POD",
+      "relation": "REQUESTS",
+      "rationale": "検収省力化の要求"
+    },
+    {
+      "sourceCode": "CUST-PARTS",
+      "targetCode": "NEED-TRACE",
+      "relation": "REQUESTS",
+      "rationale": "緊急便の要求"
+    },
+    {
+      "sourceCode": "NEED-FRESH",
+      "targetCode": "SVC-COLD",
+      "relation": "ADDRESSED_BY",
+      "rationale": "冷蔵便で温度条件を担保"
+    },
+    {
+      "sourceCode": "NEED-FRESH",
+      "targetCode": "RULE-003",
+      "relation": "CONSTRAINED_BY",
+      "rationale": "午前納品と冬季遅延の調整が必要"
+    },
+    {
+      "sourceCode": "NEED-POD",
+      "targetCode": "SVC-VISIBILITY",
+      "relation": "ADDRESSED_BY",
+      "rationale": "電子POD共有"
+    },
+    {
+      "sourceCode": "NEED-TRACE",
+      "targetCode": "SVC-VISIBILITY",
+      "relation": "ADDRESSED_BY",
+      "rationale": "到着見込み共有"
+    },
+    {
+      "sourceCode": "NEED-MARGIN",
+      "targetCode": "SVC-JOINT",
+      "relation": "ADDRESSED_BY",
+      "rationale": "積載率向上で収益を改善する仮説"
+    },
+    {
+      "sourceCode": "NEED-CAPACITY",
+      "targetCode": "SVC-JOINT",
+      "relation": "ADDRESSED_BY",
+      "rationale": "便を共同化し輸送力を確保"
+    },
+    {
+      "sourceCode": "NEED-QUALITY",
+      "targetCode": "RULE-002",
+      "relation": "CONSTRAINED_BY",
+      "rationale": "品質基準を削減しない"
+    },
+    {
+      "sourceCode": "NEED-MARGIN",
+      "targetCode": "NEED-QUALITY",
+      "relation": "BALANCED_WITH",
+      "rationale": "収益改善で温度管理を省略しない"
+    },
+    {
+      "sourceCode": "NEED-OFFLINE",
+      "targetCode": "SVC-VISIBILITY",
+      "relation": "ADDRESSED_BY",
+      "rationale": "端末保存と再同期"
+    },
+    {
+      "sourceCode": "NEED-WAIT",
+      "targetCode": "FLOW-RECEIVE",
+      "relation": "ADDRESSED_BY",
+      "rationale": "受注時の予約枠合意"
+    },
+    {
+      "sourceCode": "NEED-AUTHORITY",
+      "targetCode": "RULE-004",
+      "relation": "ADDRESSED_BY",
+      "rationale": "判断権限を明文化"
+    },
+    {
+      "sourceCode": "NEED-MARGIN",
+      "targetCode": "KPI-MARGIN",
+      "relation": "MEASURED_BY",
+      "rationale": "月次利益率"
+    },
+    {
+      "sourceCode": "NEED-QUALITY",
+      "targetCode": "KPI-TEMP",
+      "relation": "MEASURED_BY",
+      "rationale": "温度逸脱率"
+    },
+    {
+      "sourceCode": "NEED-FRESH",
+      "targetCode": "KPI-OTIF",
+      "relation": "MEASURED_BY",
+      "rationale": "荷主納期と欠品"
+    },
+    {
+      "sourceCode": "SVC-JOINT",
+      "targetCode": "KPI-LOAD",
+      "relation": "MEASURED_BY",
+      "rationale": "重量と容積の利用"
+    },
+    {
+      "sourceCode": "TERM-OTIF",
+      "targetCode": "KPI-OTIF",
+      "relation": "DEFINES",
+      "rationale": "指標の定義"
+    },
+    {
+      "sourceCode": "TERM-POD",
+      "targetCode": "RULE-006",
+      "relation": "EXPLAINED_BY",
+      "rationale": "証跡の提出期限"
+    },
+    {
+      "sourceCode": "TERM-COLDCHAIN",
+      "targetCode": "SVC-COLD",
+      "relation": "APPLIES_TO",
+      "rationale": "低温物流サービス"
+    },
+    {
+      "sourceCode": "TERM-SLA",
+      "targetCode": "FLOW-RECEIVE",
+      "relation": "APPLIES_TO",
+      "rationale": "契約条件の確認"
+    },
+    {
+      "sourceCode": "TERM-CROSSDOCK",
+      "targetCode": "FLOW-TRANSFER",
+      "relation": "APPLIES_TO",
+      "rationale": "中継工程"
+    },
+    {
+      "sourceCode": "TERM-LOADFACTOR",
+      "targetCode": "KPI-LOAD",
+      "relation": "DEFINES",
+      "rationale": "積載率の定義"
+    },
+    {
+      "sourceCode": "IND-CAPACITY",
+      "targetCode": "NEED-CAPACITY",
+      "relation": "MOTIVATES",
+      "rationale": "市場仮説から輸送力対策へ"
+    },
+    {
+      "sourceCode": "IND-TRACE",
+      "targetCode": "SVC-VISIBILITY",
+      "relation": "MOTIVATES",
+      "rationale": "証跡需要への対応仮説"
+    },
+    {
+      "sourceCode": "IND-GREEN",
+      "targetCode": "SVC-JOINT",
+      "relation": "MOTIVATES",
+      "rationale": "共同配送の提案仮説"
+    },
+    {
+      "sourceCode": "COMP-SNOW",
+      "targetCode": "RULE-003",
+      "relation": "COMPARED_WITH",
+      "rationale": "冬季対応と通知の比較軸"
+    },
+    {
+      "sourceCode": "COMP-DIGITAL",
+      "targetCode": "SVC-VISIBILITY",
+      "relation": "COMPARED_WITH",
+      "rationale": "追跡と証跡の比較軸"
+    },
+    {
+      "sourceCode": "COMP-JOINT",
+      "targetCode": "SVC-JOINT",
+      "relation": "COMPARED_WITH",
+      "rationale": "価格と混載品質の比較軸"
+    },
+    {
+      "sourceCode": "CODE-002",
+      "targetCode": "SVC-COLD",
+      "relation": "DEFINES",
+      "rationale": "CHL温度帯"
+    },
+    {
+      "sourceCode": "CODE-003",
+      "targetCode": "FLOW-EXCEPTION",
+      "relation": "DEFINES",
+      "rationale": "例外コードの記録"
+    }
+  ]
+}

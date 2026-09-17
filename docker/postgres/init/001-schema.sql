@@ -14,15 +14,34 @@ CREATE TABLE public.personal_access_tokens (
     CHECK (expires_at > created_at)
 );
 
-CREATE TABLE public.business_rules (
-    id varchar(32) PRIMARY KEY,
+CREATE TABLE public.knowledge_items (
+    code varchar(64) PRIMARY KEY,
+    kind varchar(32) NOT NULL,
     title text NOT NULL,
-    category text NOT NULL,
-    region text NOT NULL,
     content text NOT NULL,
-    effective_from date NOT NULL,
-    metadata jsonb NOT NULL DEFAULT '{}'::jsonb
+    owner_code varchar(64),
+    region text NOT NULL,
+    aliases text NOT NULL DEFAULT '',
+    status varchar(16) NOT NULL,
+    valid_from date NOT NULL,
+    valid_to date,
+    source_uri text NOT NULL,
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    CHECK (valid_to IS NULL OR valid_to > valid_from)
 );
-CREATE INDEX business_rules_attributes_idx ON public.business_rules (category, region);
-CREATE INDEX business_rules_fulltext_idx ON public.business_rules USING pgroonga (title, content);
-SELECT create_graph('transport_rules');
+CREATE INDEX knowledge_items_attributes_idx
+    ON public.knowledge_items (kind, region, status, valid_from, valid_to);
+CREATE INDEX knowledge_items_fulltext_idx
+    ON public.knowledge_items USING pgroonga (title, content, aliases);
+
+CREATE TABLE public.knowledge_relations (
+    source_code varchar(64) NOT NULL REFERENCES public.knowledge_items(code),
+    target_code varchar(64) NOT NULL REFERENCES public.knowledge_items(code),
+    relation varchar(32) NOT NULL,
+    rationale text NOT NULL,
+    PRIMARY KEY (source_code, target_code, relation)
+);
+CREATE INDEX knowledge_relations_target_idx
+    ON public.knowledge_relations (target_code, relation);
+
+SELECT create_graph('business_knowledge');

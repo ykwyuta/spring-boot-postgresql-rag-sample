@@ -15,8 +15,10 @@ Spring BootベースのAI Agent向けのRAGのサンプルコードを作成す�
 ## ディレクトリ構造と実装範囲
 
 [構成・責務・検索設計](docs/architecture.md)を参照。
-初期構成にはSpring Boot起動クラス、SSE設定、PAT認証、DB初期化、デモデータを含む。
-検索サービスとMCP検索ツールは後続の実装対象。
+Spring Boot起動クラス、SSE、PAT認証、DB初期化、充実した架空デモシナリオ、検索サービス、MCP検索ツールを含む。
+
+デモシナリオは、コード体系、用語集、組織構造、業務フロー、商品・サービスとして提供する輸送メニュー、経営・取引先・現場ニーズ、KPI、業界・競合動向を58項目・108関係で表現する。
+市場・競合・会社・数値はすべて架空であり、事実情報として利用しないこと。
 
 ## 初期セットアップ
 
@@ -64,6 +66,19 @@ PATは発行時だけ出力されるので安全に保管する。ソースや�
 MCPクライアントにはSSE URL `http://localhost:8080/sse` とBearerヘッダーを設定する。
 メッセージ送信先はSSEのendpointイベントから取得する（基本パス `/mcp/message`）。
 
+利用できるMCPツール：
+
+- `search_business_knowledge`：日本語全文、種別、地域、状態、基準日で検索
+- `get_business_knowledge`：コードから根拠本文、主管、有効期間、出典を取得
+- `explore_business_relationships`：最大3段階で組織、工程、規程、サービス、ニーズ、KPI、市場仮説の関係を探索
+
+MCPの疎通確認には、有効なPATを環境変数へ設定してスモークテストを実行できる。
+
+```powershell
+$env:MCP_PAT = $pat
+node scripts/smoke-mcp.mjs http://localhost:8080
+```
+
 失効する場合はDBで対象PATの`revoked_at`を更新する：
 
 ```sql
@@ -72,3 +87,11 @@ UPDATE public.personal_access_tokens SET revoked_at = CURRENT_TIMESTAMP WHERE id
 
 停止は`docker compose --profile app down`。データはボリュームに保持される。
 初期SQLは初回起動時のみ適用されるため、詳細は構成ドキュメントを参照。
+
+既存の開発用DBボリュームへデモシナリオの変更を反映する場合は、必要なデータを退避したうえでボリュームを作り直す。
+次の`down -v`はPATを含むローカルDBデータを削除する。
+
+```powershell
+docker compose --profile app down -v
+docker compose --profile app up -d --build
+```

@@ -1,2 +1,2 @@
-/** MCP tools and transport-facing adapters. Search tools will be added here. */
+/** MCP tools and transport-facing adapters for business knowledge retrieval. */
 package com.example.transportrag.mcp;
