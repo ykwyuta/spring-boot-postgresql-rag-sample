@@ -1,5 +1,7 @@
 const baseUrl = process.argv[2] ?? "http://localhost:8080";
 const startCode = process.argv[3] ?? "NEED-MARGIN";
+const searchQuery = process.argv[4] ?? "冷蔵";
+const projectCode = process.argv[5];
 const token = process.env.MCP_PAT;
 if (!token) {
   throw new Error("MCP_PAT is required");
@@ -67,15 +69,27 @@ const tools = await responseFor(2);
 
 await send({
   jsonrpc: "2.0", id: 3, method: "tools/call",
-  params: { name: "search_business_knowledge", arguments: { query: "冷蔵", kind: "RULE", limit: 5 } }
+  params: { name: "search_business_knowledge", arguments: { projectCode, query: searchQuery, limit: 10 } }
 });
 const search = await responseFor(3);
 
 await send({
   jsonrpc: "2.0", id: 4, method: "tools/call",
-  params: { name: "explore_business_relationships", arguments: { code: startCode, depth: 2, limit: 10 } }
+  params: { name: "explore_business_relationships", arguments: { projectCode, code: startCode, depth: 2, limit: 10 } }
 });
 const relations = await responseFor(4);
+
+await send({
+  jsonrpc: "2.0", id: 5, method: "tools/call",
+  params: { name: "list_my_projects", arguments: {} }
+});
+const projects = await responseFor(5);
+
+await send({
+  jsonrpc: "2.0", id: 6, method: "tools/call",
+  params: { name: "get_business_knowledge", arguments: { projectCode, code: startCode } }
+});
+const detail = await responseFor(6);
 
 function textResult(message) {
   const text = message.result?.content?.find(item => item.type === "text")?.text;
@@ -84,6 +98,8 @@ function textResult(message) {
 
 const output = {
   tools: tools.result.tools.map(tool => tool.name),
+  projects: textResult(projects).map(project => project.code),
+  detailCode: textResult(detail)?.code ?? null,
   searchCodes: textResult(search).map(item => item.code),
   relatedCodes: textResult(relations).map(item => item.toCode)
 };

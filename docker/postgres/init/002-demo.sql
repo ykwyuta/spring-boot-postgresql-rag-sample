@@ -2,7 +2,7 @@
 INSERT INTO public.knowledge_items
 (code, kind, title, content, owner_code, region, aliases, status, valid_from, valid_to, source_uri, metadata)
 VALUES
-('CODE-001', 'CODE', '青空運送のコード体系', '識別子は種別接頭辞とハイフンと英大文字・数字で構成する。ORGは組織、TERMは用語、FLOWは工程、SVCはサービス、CUSTは荷主、RULEは規程、NEEDはニーズ、KPIは指標、INDは業界観測、COMPは競合観測。識別子は再利用せず改訂時も出典と有効期間を保持する。', 'ORG-STRATEGY', '全国', 'コード体系 識別子 マスタ', 'APPROVED', '2026-01-01', NULL, 'demo://aozora/2026/CODE-001', '{}'),
+('CODE-001', 'CODE', '青空運送のコード体系', '識別子は種別接頭辞とハイフンと英大文字・数字で構成する。PRJはプロジェクト、ORGは組織、TERMは用語、FLOWは工程、SVCはサービス、CUSTは荷主、RULEは規程、NEEDはニーズ、KPIは指標、INDは業界観測、COMPは競合観測。識別子は再利用せず改訂時も出典と有効期間を保持する。', 'ORG-STRATEGY', '全国', 'コード体系 識別子 マスタ', 'APPROVED', '2026-01-01', NULL, 'demo://aozora/2026/CODE-001', '{}'),
 ('CODE-002', 'CODE', '荷物・便・温度帯のコード', '荷物番号はAZと受付日8桁と連番6桁。便番号はLNと拠点対と出発日。温度帯AMBは常温、CHLは冷蔵2〜8度、FRZは冷凍マイナス18度以下。SVC-COLDはCHLのみを扱い、冷凍を混載しない。', 'ORG-OPS', '全国', '', 'APPROVED', '2026-01-01', NULL, 'demo://aozora/2026/CODE-002', '{}'),
 ('CODE-003', 'CODE', '例外と配送状態のコード', '状態はRECEIVED→PLANNED→PICKED_UP→IN_TRANSIT→DELIVERED。例外TEMPは温度逸脱、SNOWは雪害、ABSENTは不在、DAMAGEは破損。例外発生時は自動的な配送完了にせず責任者の判断を記録する。', 'ORG-QUALITY', '全国', '', 'APPROVED', '2026-01-01', NULL, 'demo://aozora/2026/CODE-003', '{}'),
 ('TERM-OTIF', 'TERM', '納期内・全量納品率', '約束日時までに欠品なく納品した件数を対象納品件数で割る。顧客合意の納期変更を分母から除外しない。遅延と欠品の重複は1件として数える。', 'ORG-QUALITY', '全国', '納期遵守 完納率', 'APPROVED', '2026-01-01', NULL, 'demo://aozora/2026/TERM-OTIF', '{}'),

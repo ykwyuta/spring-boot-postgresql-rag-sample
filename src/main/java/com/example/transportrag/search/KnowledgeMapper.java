@@ -7,9 +7,15 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface KnowledgeMapper {
-    KnowledgeItem findByCode(@Param("code") String code, @Param("asOf") LocalDate asOf);
+    KnowledgeItem findByCode(
+            @Param("subject") String subject,
+            @Param("projectCode") String projectCode,
+            @Param("code") String code,
+            @Param("asOf") LocalDate asOf);
 
     List<KnowledgeItem> search(
+            @Param("subject") String subject,
+            @Param("projectCode") String projectCode,
             @Param("query") String query,
             @Param("kind") String kind,
             @Param("region") String region,
@@ -18,6 +24,8 @@ public interface KnowledgeMapper {
             @Param("limit") int limit);
 
     List<KnowledgeRelation> findRelated(
+            @Param("subject") String subject,
+            @Param("projectCode") String projectCode,
             @Param("code") String code,
             @Param("depth") int depth,
             @Param("asOf") LocalDate asOf,

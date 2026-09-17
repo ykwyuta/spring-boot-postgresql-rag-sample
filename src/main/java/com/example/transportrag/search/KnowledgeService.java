@@ -1,5 +1,6 @@
 package com.example.transportrag.search;
 
+import com.example.transportrag.auth.AuthenticatedUserProvider;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -9,24 +10,29 @@ public class KnowledgeService {
     private static final int MAX_RESULTS = 50;
     private static final int MAX_DEPTH = 3;
     private final KnowledgeMapper mapper;
+    private final AuthenticatedUserProvider userProvider;
 
-    public KnowledgeService(KnowledgeMapper mapper) {
+    public KnowledgeService(KnowledgeMapper mapper, AuthenticatedUserProvider userProvider) {
         this.mapper = mapper;
+        this.userProvider = userProvider;
     }
 
-    public KnowledgeItem get(String code, LocalDate asOf) {
-        return mapper.findByCode(normalizeCode(code), dateOrToday(asOf));
+    public KnowledgeItem get(String projectCode, String code, LocalDate asOf) {
+        return mapper.findByCode(userProvider.subject(), projectCodeOrNull(projectCode),
+                normalizeCode(code), dateOrToday(asOf));
     }
 
-    public List<KnowledgeItem> search(String query, String kind, String region, String status,
+    public List<KnowledgeItem> search(String projectCode, String query, String kind, String region, String status,
             LocalDate asOf, Integer limit) {
-        return mapper.search(trimToNull(query), upperToNull(kind), trimToNull(region),
+        return mapper.search(userProvider.subject(), projectCodeOrNull(projectCode), trimToNull(query),
+                upperToNull(kind), trimToNull(region),
                 upperToNull(status), dateOrToday(asOf), bounded(limit, 20, MAX_RESULTS));
     }
 
-    public List<KnowledgeRelation> related(String code, Integer depth, LocalDate asOf, Integer limit) {
-        return mapper.findRelated(normalizeCode(code), bounded(depth, 1, MAX_DEPTH),
-                dateOrToday(asOf), bounded(limit, 30, MAX_RESULTS));
+    public List<KnowledgeRelation> related(String projectCode, String code, Integer depth,
+            LocalDate asOf, Integer limit) {
+        return mapper.findRelated(userProvider.subject(), projectCodeOrNull(projectCode), normalizeCode(code),
+                bounded(depth, 1, MAX_DEPTH), dateOrToday(asOf), bounded(limit, 30, MAX_RESULTS));
     }
 
     private static String normalizeCode(String value) {
@@ -43,6 +49,14 @@ public class KnowledgeService {
     private static String upperToNull(String value) {
         String normalized = trimToNull(value);
         return normalized == null ? null : normalized.toUpperCase();
+    }
+
+    private static String projectCodeOrNull(String value) {
+        String normalized = upperToNull(value);
+        if (normalized != null && !normalized.matches("PRJ-[A-Z0-9-]{1,60}")) {
+            throw new IllegalArgumentException("projectCode must use the PRJ- prefix");
+        }
+        return normalized;
     }
 
     private static LocalDate dateOrToday(LocalDate value) {

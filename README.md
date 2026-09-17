@@ -20,6 +20,10 @@ Spring Boot起動クラス、SSE、PAT認証、DB初期化、充実した架空�
 デモシナリオは、コード体系、用語集、組織構造、業務フロー、商品・サービスとして提供する輸送メニュー、経営・取引先・現場ニーズ、KPI、業界・競合動向を58項目・108関係で表現する。
 市場・競合・会社・数値はすべて架空であり、事実情報として利用しないこと。
 
+ユーザーは1件以上のプロジェクトへ所属し、所属プロジェクトに割り当てられた知識だけを検索できる。
+デモでは「北海道コールドチェーン改善」「共同配送収益改善」「配送可視化・電子POD」の3プロジェクトを用意する。
+横断マネージャーは3プロジェクト、各担当者は1プロジェクトへ所属する。
+
 ## 初期セットアップ
 
 必要環境：Docker Desktop（Linuxコンテナ）。ローカルでアプリを実行する場合はJDK 25とMaven 3.9以上も必要。
@@ -55,7 +59,7 @@ DBの設定を変えた場合は`DB_URL`、`DB_USERNAME`、`DB_PASSWORD`を環�
 
 ```powershell
 Get-Content -Raw -Encoding utf8 scripts/verify-db.sql | docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-$pat = ./scripts/create-pat.ps1 -Subject demo-user
+$pat = ./scripts/create-pat.ps1 -Subject demo-user -ProjectCode PRJ-COLD-HOKKAIDO
 # 認証なしでは401
 curl.exe -i http://localhost:8080/sse
 # 認証ありではSSEのendpointイベント。接続を継続するため10秒で終了
@@ -68,15 +72,26 @@ MCPクライアントにはSSE URL `http://localhost:8080/sse` とBearerヘッ�
 
 利用できるMCPツール：
 
+- `list_my_projects`：認証ユーザーの所属プロジェクトとロールを一覧表示
 - `search_business_knowledge`：日本語全文、種別、地域、状態、基準日で検索
 - `get_business_knowledge`：コードから根拠本文、主管、有効期間、出典を取得
 - `explore_business_relationships`：最大3段階で組織、工程、規程、サービス、ニーズ、KPI、市場仮説の関係を探索
+
+複数プロジェクトを割り当てる場合：
+
+```powershell
+$pat = ./scripts/create-pat.ps1 -Subject demo-manager `
+  -ProjectCode PRJ-COLD-HOKKAIDO,PRJ-JOINT-DELIVERY,PRJ-DIGITAL-POD
+```
+
+検索、コード指定取得、関係探索のすべてで所属確認を行う。
+非所属プロジェクトのコードを直接指定しても、項目や関係は返さない。
 
 MCPの疎通確認には、有効なPATを環境変数へ設定してスモークテストを実行できる。
 
 ```powershell
 $env:MCP_PAT = $pat
-node scripts/smoke-mcp.mjs http://localhost:8080
+node scripts/smoke-mcp.mjs http://localhost:8080 RULE-002 冷蔵 PRJ-COLD-HOKKAIDO
 ```
 
 失効する場合はDBで対象PATの`revoked_at`を更新する：

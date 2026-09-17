@@ -11,14 +11,17 @@
 ├── docker/postgres/
 │   ├── Dockerfile                  # PostgreSQL 17 + PGroonga + Apache AGE
 │   └── init/
-│       ├── 001-schema.sql          # 拡張、PAT、知識項目、関係、インデックス、グラフ
-│       └── 002-demo.sql            # 架空の青空運送の知識項目と関係
+│       ├── 001-schema.sql          # ユーザー、プロジェクト、PAT、知識、関係、拡張
+│       ├── 002-demo.sql            # 架空の青空運送の知識項目と関係
+│       └── 003-project-access.sql  # 所属とプロジェクト別の知識割当
 ├── demo/scenario.json              # 読みやすいシナリオ原本（全データは架空）
+├── demo/project-access.json        # 架空ユーザー、所属、知識の公開範囲
 ├── src/main/java/com/example/transportrag/
 │   ├── TransportRagApplication.java
 │   ├── auth/                      # PATのハッシュ照合、有効期限・失効確認
 │   ├── config/                    # Spring Security設定
-│   ├── mcp/                       # 3つのMCP知識検索ツール
+│   ├── mcp/                       # 所属確認と3つのMCP知識検索ツール
+│   ├── project/                   # 所属プロジェクトの取得
 │   └── search/                    # 検索サービス、モデル、Mapper
 ├── src/main/resources/
 │   ├── application.yml
@@ -40,10 +43,11 @@
 - 全文検索：PGroongaで日本語のタイトル、本文、別名を検索する。
 - 関係探索：`knowledge_relations` を再帰検索し、規程から担当組織・工程・サービス・ニーズ・KPI・市場仮説へ移動する。同じ関係をApache AGEの`business_knowledge`にも格納し、DB検証でCypher検索を確認する。
 - MCP層は検索サービスを呼び、コード、出典、有効期間、主管組織を返す。SQLやCypherの自由入力は公開しない。
+- `knowledge_item_projects`と`user_project_memberships`をSQLの`EXISTS`条件で照合する。取得後のJavaフィルターに依存しない。
 
 関係探索は有向関係を双方向にたどる。定義と逆向きにたどった結果は関係名へ`INVERSE_`を付け、元の意味を失わないようにする。
 
-MCPには`search_business_knowledge`、`get_business_knowledge`、`explore_business_relationships`を公開する。
+MCPには`list_my_projects`、`search_business_knowledge`、`get_business_knowledge`、`explore_business_relationships`を公開する。
 検索結果を統合して文章を生成する処理は呼び出し元エージェントが担う。
 LLMによる回答生成は呼び出し元エージェントが担い、この初期構成にLLM APIキーは不要。
 
@@ -56,12 +60,23 @@ LLMによる回答生成は呼び出し元エージェントが担い、この�
 状態は`APPROVED`（確定情報）、`PROPOSED`（ニーズ・提案）、`OBSERVATION`（外部環境の仮説）、`RETIRED`（廃止）を区別する。
 有効期間検索により、旧POD規程と2026年4月以降の現行規程を基準日ごとに分離できる。
 
+### プロジェクト別シナリオ
+
+- `PRJ-COLD-HOKKAIDO`：冷蔵温度管理、北海道冬季配送、北星フーズ、温度逸脱、コールドチェーン関連情報を公開する。
+- `PRJ-JOINT-DELIVERY`：共同配送、混載条件、積載率、利益率、環境配慮調達、共同配送競合の情報を公開する。
+- `PRJ-DIGITAL-POD`：配送可視化、電子POD、通信断、追跡ニーズ、デジタル競合の情報を公開する。
+
+コード体系や基本組織など一部の共通知識は各プロジェクトへ個別に割り当てる。
+共通扱いも明示的な割当であり、所属のないユーザーへ無条件公開する情報は設けない。
+デモ担当者の可視件数は冷蔵42件、共同配送39件、配送DX41件で、横断マネージャーは58件すべてを閲覧できる。
+
 ## 認証
 
 すべてのHTTPリクエストに `Authorization: Bearer <PAT>` を要求する。
 SSE接続のGETとメッセージ送信のPOSTの両方に付与する。
 ステートレス認証とし、Cookieログインと人向け管理画面は設けない。
 DBにはSHA-256ハッシュだけを保存し、各HTTPリクエストで有効期限と失効状態を確認する。
+認証後のsubjectを検索SQLへ渡し、毎回DB上の有効なプロジェクト所属を照合する。
 既存のSSE接続をPAT失効時に強制切断する処理は初期構成に含めない。
 
 ## DB初期化と運用範囲

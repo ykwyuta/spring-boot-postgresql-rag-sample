@@ -8,17 +8,43 @@
 
   <select id="findByCode" resultType="com.example.transportrag.search.KnowledgeItem">
     SELECT <include refid="itemColumns"/>
-    FROM public.knowledge_items
+    FROM public.knowledge_items i
     WHERE code = #{code}
       AND valid_from &lt;= #{asOf}
       AND (valid_to IS NULL OR valid_to &gt; #{asOf})
+      AND EXISTS (
+        SELECT 1
+        FROM public.knowledge_item_projects access
+        JOIN public.user_project_memberships membership
+          ON membership.project_code = access.project_code
+        JOIN public.projects project ON project.code = membership.project_code
+        WHERE access.item_code = i.code
+          AND membership.subject = #{subject}
+          AND project.active
+        <if test="projectCode != null and projectCode != ''">
+          AND access.project_code = #{projectCode}
+        </if>
+      )
   </select>
 
   <select id="search" resultType="com.example.transportrag.search.KnowledgeItem">
     SELECT <include refid="itemColumns"/>
-    FROM public.knowledge_items
+    FROM public.knowledge_items i
     WHERE valid_from &lt;= #{asOf}
       AND (valid_to IS NULL OR valid_to &gt; #{asOf})
+      AND EXISTS (
+        SELECT 1
+        FROM public.knowledge_item_projects access
+        JOIN public.user_project_memberships membership
+          ON membership.project_code = access.project_code
+        JOIN public.projects project ON project.code = membership.project_code
+        WHERE access.item_code = i.code
+          AND membership.subject = #{subject}
+          AND project.active
+        <if test="projectCode != null and projectCode != ''">
+          AND access.project_code = #{projectCode}
+        </if>
+      )
     <if test="query != null and query != ''">
       AND (title &amp;@ #{query} OR content &amp;@ #{query} OR aliases &amp;@ #{query} OR code = upper(#{query}))
     </if>
@@ -46,7 +72,34 @@
              ARRAY[#{code}::varchar,
                    CASE WHEN r.source_code = #{code} THEN r.target_code ELSE r.source_code END]::varchar[] AS path
       FROM public.knowledge_relations r
-      WHERE r.source_code = #{code} OR r.target_code = #{code}
+      WHERE (r.source_code = #{code} OR r.target_code = #{code})
+        AND EXISTS (
+          SELECT 1 FROM public.knowledge_item_projects start_access
+          JOIN public.user_project_memberships start_membership
+            ON start_membership.project_code = start_access.project_code
+          JOIN public.projects start_project
+            ON start_project.code = start_membership.project_code
+          WHERE start_access.item_code = #{code}
+            AND start_membership.subject = #{subject}
+            AND start_project.active
+          <if test="projectCode != null and projectCode != ''">
+            AND start_access.project_code = #{projectCode}
+          </if>
+        )
+        AND EXISTS (
+          SELECT 1 FROM public.knowledge_item_projects next_access
+          JOIN public.user_project_memberships next_membership
+            ON next_membership.project_code = next_access.project_code
+          JOIN public.projects next_project
+            ON next_project.code = next_membership.project_code
+          WHERE next_access.item_code = CASE
+                  WHEN r.source_code = #{code} THEN r.target_code ELSE r.source_code END
+            AND next_membership.subject = #{subject}
+            AND next_project.active
+          <if test="projectCode != null and projectCode != ''">
+            AND next_access.project_code = #{projectCode}
+          </if>
+        )
       UNION ALL
       SELECT g.depth + 1,
              g.to_code,
@@ -59,6 +112,20 @@
         ON (r.source_code = g.to_code OR r.target_code = g.to_code)
       WHERE g.depth &lt; #{depth}
         AND NOT (CASE WHEN r.source_code = g.to_code THEN r.target_code ELSE r.source_code END = ANY(g.path))
+        AND EXISTS (
+          SELECT 1 FROM public.knowledge_item_projects next_access
+          JOIN public.user_project_memberships next_membership
+            ON next_membership.project_code = next_access.project_code
+          JOIN public.projects next_project
+            ON next_project.code = next_membership.project_code
+          WHERE next_access.item_code = CASE
+                  WHEN r.source_code = g.to_code THEN r.target_code ELSE r.source_code END
+            AND next_membership.subject = #{subject}
+            AND next_project.active
+          <if test="projectCode != null and projectCode != ''">
+            AND next_access.project_code = #{projectCode}
+          </if>
+        )
     )
     SELECT g.depth, g.from_code, g.relation, g.to_code, g.rationale, i.title, i.kind
     FROM graph g

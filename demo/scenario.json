@@ -1,11 +1,34 @@
 {
   "description": "青空運送の架空シナリオ。市場・競合・数値を含め全てデモ設定。",
+  "projects": [
+    {
+      "code": "PRJ-COLD-HOKKAIDO",
+      "name": "北海道コールドチェーン改善",
+      "description": "北海道向け冷蔵配送の温度品質、冬季運行、荷主通知を改善するプロジェクト"
+    },
+    {
+      "code": "PRJ-JOINT-DELIVERY",
+      "name": "共同配送収益改善",
+      "description": "混載条件を守りながら共同配送の積載率と収益性を検証するプロジェクト"
+    },
+    {
+      "code": "PRJ-DIGITAL-POD",
+      "name": "配送可視化・電子POD",
+      "description": "配送追跡、電子POD、通信断時の記録と同期を改善するプロジェクト"
+    }
+  ],
+  "users": [
+    {"subject": "demo-cold", "displayName": "冷蔵改善担当", "projects": ["PRJ-COLD-HOKKAIDO"]},
+    {"subject": "demo-joint", "displayName": "共同配送担当", "projects": ["PRJ-JOINT-DELIVERY"]},
+    {"subject": "demo-digital", "displayName": "配送DX担当", "projects": ["PRJ-DIGITAL-POD"]},
+    {"subject": "demo-manager", "displayName": "横断マネージャー", "projects": ["PRJ-COLD-HOKKAIDO", "PRJ-JOINT-DELIVERY", "PRJ-DIGITAL-POD"]}
+  ],
   "items": [
     {
       "code": "CODE-001",
       "kind": "CODE",
       "title": "青空運送のコード体系",
-      "content": "識別子は種別接頭辞とハイフンと英大文字・数字で構成する。ORGは組織、TERMは用語、FLOWは工程、SVCはサービス、CUSTは荷主、RULEは規程、NEEDはニーズ、KPIは指標、INDは業界観測、COMPは競合観測。識別子は再利用せず改訂時も出典と有効期間を保持する。",
+      "content": "識別子は種別接頭辞とハイフンと英大文字・数字で構成する。PRJはプロジェクト、ORGは組織、TERMは用語、FLOWは工程、SVCはサービス、CUSTは荷主、RULEは規程、NEEDはニーズ、KPIは指標、INDは業界観測、COMPは競合観測。識別子は再利用せず改訂時も出典と有効期間を保持する。",
       "ownerCode": "ORG-STRATEGY",
       "region": "全国",
       "aliases": "コード体系 識別子 マスタ",
