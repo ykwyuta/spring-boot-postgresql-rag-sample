@@ -29,3 +29,8 @@ SELECT * FROM cypher('business_knowledge', $$
   MATCH (need:Knowledge {code: 'NEED-MARGIN'})-[relation]->(related:Knowledge)
   RETURN type(relation), related.code
 $$) AS (relation agtype, related_code agtype);
+SELECT accessed_at, subject, action, requested_project_code,
+       resource_type, resource_code, relation_from_code, relation_name
+FROM public.resource_access_audit_log
+ORDER BY accessed_at DESC, id DESC
+LIMIT 20;

@@ -1,6 +1,7 @@
 package com.example.transportrag.search;
 
 import com.example.transportrag.auth.AuthenticatedUserProvider;
+import com.example.transportrag.audit.ResourceAccessAuditService;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,8 @@ import static org.mockito.Mockito.*;
 class KnowledgeServiceTest {
     private final KnowledgeMapper mapper = mock(KnowledgeMapper.class);
     private final AuthenticatedUserProvider userProvider = mock(AuthenticatedUserProvider.class);
-    private final KnowledgeService service = new KnowledgeService(mapper, userProvider);
+    private final ResourceAccessAuditService auditService = mock(ResourceAccessAuditService.class);
+    private final KnowledgeService service = new KnowledgeService(mapper, userProvider, auditService);
 
     KnowledgeServiceTest() {
         when(userProvider.subject()).thenReturn("demo-cold");
@@ -50,6 +52,7 @@ class KnowledgeServiceTest {
 
         assertThat(service.search(null, "冷蔵", null, null, null, LocalDate.of(2026, 9, 17), 10))
                 .containsExactly(item);
+        verify(auditService).recordKnowledgeItems("demo-cold", "SEARCH", null, List.of(item));
     }
 
     @Test

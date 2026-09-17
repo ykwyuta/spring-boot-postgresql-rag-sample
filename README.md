@@ -4,7 +4,7 @@ Spring BootベースのAI Agent向けのRAGのサンプルコードを作成す�
 
 以下の技術スタックを採用する
 
-* 呼び出し元はCodexやClaude CodeでMCP経由。STDIOではなくSSE。
+* 呼び出し元はCodexやClaude CodeでMCP経由。Stateless Streamable HTTPを使用する。
 * Spring Boot 4.1＋Spring WebMVC＋Spring Security＋MyBatis＋MCP Server Boot Starters
 * Java 25
 * PostgreSQLはDocker composeで用意し、Apache AgeとPGroongaを組み合わせて、属性検索＋全文検索＋グラフ検索を実装
@@ -15,7 +15,7 @@ Spring BootベースのAI Agent向けのRAGのサンプルコードを作成す�
 ## ディレクトリ構造と実装範囲
 
 [構成・責務・検索設計](docs/architecture.md)を参照。
-Spring Boot起動クラス、SSE、PAT認証、DB初期化、充実した架空デモシナリオ、検索サービス、MCP検索ツールを含む。
+Spring Boot起動クラス、Stateless Streamable HTTP、PAT認証、DB初期化、充実した架空デモシナリオ、検索サービス、MCP検索ツールを含む。
 
 デモシナリオは、コード体系、用語集、組織構造、業務フロー、商品・サービスとして提供する輸送メニュー、経営・取引先・現場ニーズ、KPI、業界・競合動向を58項目・108関係で表現する。
 市場・競合・会社・数値はすべて架空であり、事実情報として利用しないこと。
@@ -61,14 +61,19 @@ DBの設定を変えた場合は`DB_URL`、`DB_USERNAME`、`DB_PASSWORD`を環�
 Get-Content -Raw -Encoding utf8 scripts/verify-db.sql | docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 $pat = ./scripts/create-pat.ps1 -Subject demo-user -ProjectCode PRJ-COLD-HOKKAIDO
 # 認証なしでは401
-curl.exe -i http://localhost:8080/sse
-# 認証ありではSSEのendpointイベント。接続を継続するため10秒で終了
-curl.exe -N --max-time 10 -H "Authorization: Bearer $pat" http://localhost:8080/sse
+curl.exe -i -X POST -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" `
+  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}' `
+  http://localhost:8080/mcp
+# 認証ありではinitialize結果
+curl.exe -i -X POST -H "Authorization: Bearer $pat" -H "Content-Type: application/json" `
+  -H "Accept: application/json, text/event-stream" `
+  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}' `
+  http://localhost:8080/mcp
 ```
 
 PATは発行時だけ出力されるので安全に保管する。ソースや設定ファイルへコミットしない。
-MCPクライアントにはSSE URL `http://localhost:8080/sse` とBearerヘッダーを設定する。
-メッセージ送信先はSSEのendpointイベントから取得する（基本パス `/mcp/message`）。
+MCPクライアントにはStreamable HTTP URL `http://localhost:8080/mcp` とBearerヘッダーを設定する。
+サーバーはセッション状態を保持しないため、すべてのPOSTにPATを付与する。
 
 利用できるMCPツール：
 
@@ -92,6 +97,23 @@ MCPの疎通確認には、有効なPATを環境変数へ設定してスモー�
 ```powershell
 $env:MCP_PAT = $pat
 node scripts/smoke-mcp.mjs http://localhost:8080 RULE-002 冷蔵 PRJ-COLD-HOKKAIDO
+```
+
+MCPツールが返したプロジェクト、知識項目、関係は、認証subjectと取得時刻を含む監査ログへ記録される。
+同じツール呼び出しで取得した行は`operation_id`でまとめられる。
+検索語、PAT、知識本文は監査ログへ保存しない。
+既存のDBボリュームを使う場合は、次の初期SQLを一度だけ適用する。
+
+```powershell
+$auditSql = @'
+SELECT accessed_at, subject, action, requested_project_code,
+       resource_type, resource_code, relation_from_code, relation_name
+FROM public.resource_access_audit_log
+ORDER BY accessed_at DESC, id DESC
+LIMIT 50;
+'@
+Get-Content -Raw -Encoding utf8 docker/postgres/init/004-audit.sql | docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+$auditSql | docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
 
 失効する場合はDBで対象PATの`revoked_at`を更新する：

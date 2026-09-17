@@ -13,14 +13,16 @@
 │   └── init/
 │       ├── 001-schema.sql          # ユーザー、プロジェクト、PAT、知識、関係、拡張
 │       ├── 002-demo.sql            # 架空の青空運送の知識項目と関係
-│       └── 003-project-access.sql  # 所属とプロジェクト別の知識割当
+│       ├── 003-project-access.sql  # 所属とプロジェクト別の知識割当
+│       └── 004-audit.sql           # MCPで取得されたリソースの監査ログ
 ├── demo/scenario.json              # 読みやすいシナリオ原本（全データは架空）
 ├── demo/project-access.json        # 架空ユーザー、所属、知識の公開範囲
 ├── src/main/java/com/example/transportrag/
 │   ├── TransportRagApplication.java
 │   ├── auth/                      # PATのハッシュ照合、有効期限・失効確認
+│   ├── audit/                     # 取得リソースの監査ログ記録
 │   ├── config/                    # Spring Security設定
-│   ├── mcp/                       # 所属確認と3つのMCP知識検索ツール
+│   ├── mcp/                       # 所属確認と4つのMCP知識検索ツール
 │   ├── project/                   # 所属プロジェクトの取得
 │   └── search/                    # 検索サービス、モデル、Mapper
 ├── src/main/resources/
@@ -72,12 +74,25 @@ LLMによる回答生成は呼び出し元エージェントが担い、この�
 
 ## 認証
 
-すべてのHTTPリクエストに `Authorization: Bearer <PAT>` を要求する。
-SSE接続のGETとメッセージ送信のPOSTの両方に付与する。
-ステートレス認証とし、Cookieログインと人向け管理画面は設けない。
+Stateless Streamable HTTPのすべての `POST /mcp` に `Authorization: Bearer <PAT>` を要求する。
+MCPセッションと接続状態はサーバーに保持しない。Cookieログインと人向け管理画面は設けない。
 DBにはSHA-256ハッシュだけを保存し、各HTTPリクエストで有効期限と失効状態を確認する。
 認証後のsubjectを検索SQLへ渡し、毎回DB上の有効なプロジェクト所属を照合する。
-既存のSSE接続をPAT失効時に強制切断する処理は初期構成に含めない。
+PATの失効やプロジェクト所属の変更は、次のMCPリクエストから反映される。
+
+Stateless方式ではサーバーからクライアントへのelicitation、sampling、pingを利用できない。
+本プロジェクトの検索ツールはこれらの機能に依存しない。
+
+## 監査ログ
+
+`list_my_projects`、検索、コード指定取得、関係探索が返したリソースを
+`resource_access_audit_log`へ記録する。
+監査行には操作ID、取得時刻、認証subject、操作種別、指定プロジェクト、
+リソース種別・コードを保存する。関係探索では起点コードと関係名も保存する。
+
+検索語、PAT、知識本文は保存しない。結果が0件の呼び出しは取得されたリソースがないため行を作らない。
+検索結果と監査書き込みは同じDBトランザクションで処理し、監査書き込みに失敗した場合はツール呼び出しも失敗させる。
+アプリケーションには監査行を更新・削除する機能を設けない。
 
 ## DB初期化と運用範囲
 
@@ -90,9 +105,9 @@ AGEはPG17向け公開タグ `PG17/v1.6.0-rc0` を固定し、PGroongaは公式A
 ## 参照
 
 - [Spring AI 2.0とSpring Boot 4.1の互換性](https://spring.io/blog/2026/06/12/spring-ai-2-0-0-GA-available-now/)
-- [MCP Server Boot StarterのSSE設定](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html)
+- [Spring AI Stateless MCP Server Boot Starter](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-stateless-server-boot-starter-docs.html)
 - [MyBatis Spring Boot Starter 4.0](https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/)
 - [PGroonga Debianインストール](https://pgroonga.github.io/install/debian.html)
 - [Apache AGEリリース](https://age.apache.org/release-notes/)
 
-Spring AI 2.0ではSSEは非推奨だが、本プロジェクトではREADMEの要件に合わせて明示的にSSEを選択する。
+Spring AI 2.0のStateless Streamable HTTPを採用し、MCPリクエストを単一の `POST /mcp` で処理する。

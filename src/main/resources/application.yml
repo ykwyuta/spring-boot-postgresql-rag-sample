@@ -13,10 +13,10 @@ spring:
         name: transport-rag
         version: 0.0.1
         type: SYNC
-        protocol: SSE
-        stdio: false
-        sse-endpoint: /sse
-        sse-message-endpoint: /mcp/message
+        protocol: STATELESS
+        streamable-http:
+          mcp-endpoint: /mcp
+          disallow-delete: true
 server:
   port: ${SERVER_PORT:8080}
 mybatis:

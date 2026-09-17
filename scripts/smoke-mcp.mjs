@@ -7,89 +7,72 @@ if (!token) {
   throw new Error("MCP_PAT is required");
 }
 
-const headers = { Authorization: `Bearer ${token}` };
-const controller = new AbortController();
-const response = await fetch(`${baseUrl}/sse`, { headers, signal: controller.signal });
-if (!response.ok) {
-  throw new Error(`SSE connection failed: ${response.status}`);
-}
+const endpoint = new URL("/mcp", baseUrl);
+let protocolVersion;
 
-const reader = response.body.getReader();
-const decoder = new TextDecoder();
-let buffer = "";
-
-async function nextEvent() {
-  while (!buffer.includes("\n\n")) {
-    const { value, done } = await reader.read();
-    if (done) throw new Error("SSE connection ended unexpectedly");
-    buffer += decoder.decode(value, { stream: true }).replaceAll("\r\n", "\n");
+async function post(message) {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    Accept: "application/json, text/event-stream"
+  };
+  if (protocolVersion) {
+    headers["MCP-Protocol-Version"] = protocolVersion;
   }
-  const separator = buffer.indexOf("\n\n");
-  const raw = buffer.slice(0, separator);
-  buffer = buffer.slice(separator + 2);
-  return Object.fromEntries(raw.split("\n").map(line => {
-    const index = line.indexOf(":");
-    return [line.slice(0, index), line.slice(index + 1)];
-  }));
-}
 
-const endpointEvent = await nextEvent();
-if (endpointEvent.event !== "endpoint") {
-  throw new Error(`Expected endpoint event, received ${endpointEvent.event}`);
-}
-const messageUrl = new URL(endpointEvent.data, baseUrl);
-
-async function send(message) {
-  const result = await fetch(messageUrl, {
+  const response = await fetch(endpoint, {
     method: "POST",
-    headers: { ...headers, "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(message)
   });
-  if (!result.ok) throw new Error(`MCP POST failed: ${result.status}`);
-}
-
-async function responseFor(id) {
-  while (true) {
-    const event = await nextEvent();
-    if (event.event !== "message") continue;
-    const message = JSON.parse(event.data);
-    if (message.id === id) return message;
+  if (!response.ok) {
+    throw new Error(`MCP POST failed: ${response.status} ${await response.text()}`);
   }
+  if (response.status === 202 || response.status === 204) return null;
+
+  const body = await response.text();
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) return JSON.parse(body);
+  if (contentType.includes("text/event-stream")) {
+    const messages = body.replaceAll("\r\n", "\n")
+      .split("\n\n")
+      .flatMap(event => event.split("\n"))
+      .filter(line => line.startsWith("data:"))
+      .map(line => JSON.parse(line.slice(5).trim()));
+    return messages.find(item => item.id === message.id) ?? messages.at(-1) ?? null;
+  }
+  throw new Error(`Unexpected MCP response type: ${contentType}`);
 }
 
-await send({
+const initialized = await post({
   jsonrpc: "2.0", id: 1, method: "initialize",
-  params: { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "smoke-mcp", version: "1" } }
+  params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "smoke-mcp", version: "1" } }
 });
-await responseFor(1);
-await send({ jsonrpc: "2.0", method: "notifications/initialized" });
+if (initialized?.error) throw new Error(JSON.stringify(initialized.error));
+protocolVersion = initialized.result.protocolVersion;
+await post({ jsonrpc: "2.0", method: "notifications/initialized" });
 
-await send({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} });
-const tools = await responseFor(2);
+const tools = await post({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} });
 
-await send({
+const search = await post({
   jsonrpc: "2.0", id: 3, method: "tools/call",
   params: { name: "search_business_knowledge", arguments: { projectCode, query: searchQuery, limit: 10 } }
 });
-const search = await responseFor(3);
 
-await send({
+const relations = await post({
   jsonrpc: "2.0", id: 4, method: "tools/call",
   params: { name: "explore_business_relationships", arguments: { projectCode, code: startCode, depth: 2, limit: 10 } }
 });
-const relations = await responseFor(4);
 
-await send({
+const projects = await post({
   jsonrpc: "2.0", id: 5, method: "tools/call",
   params: { name: "list_my_projects", arguments: {} }
 });
-const projects = await responseFor(5);
 
-await send({
+const detail = await post({
   jsonrpc: "2.0", id: 6, method: "tools/call",
   params: { name: "get_business_knowledge", arguments: { projectCode, code: startCode } }
 });
-const detail = await responseFor(6);
 
 function textResult(message) {
   const text = message.result?.content?.find(item => item.type === "text")?.text;
@@ -97,6 +80,7 @@ function textResult(message) {
 }
 
 const output = {
+  protocolVersion,
   tools: tools.result.tools.map(tool => tool.name),
   projects: textResult(projects).map(project => project.code),
   detailCode: textResult(detail)?.code ?? null,
@@ -104,4 +88,3 @@ const output = {
   relatedCodes: textResult(relations).map(item => item.toCode)
 };
 console.log(JSON.stringify(output, null, 2));
-controller.abort();

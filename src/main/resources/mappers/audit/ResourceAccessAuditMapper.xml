@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.transportrag.audit.ResourceAccessAuditMapper">
+  <insert id="insertAll">
+    INSERT INTO public.resource_access_audit_log (
+      operation_id, subject, action, requested_project_code,
+      resource_type, resource_code, relation_from_code, relation_name
+    ) VALUES
+    <foreach collection="entries" item="entry" separator=",">
+      (
+        CAST(#{entry.operationId} AS uuid), #{entry.subject}, #{entry.action}, #{entry.requestedProjectCode},
+        #{entry.resourceType}, #{entry.resourceCode}, #{entry.relationFromCode}, #{entry.relationName}
+      )
+    </foreach>
+  </insert>
+</mapper>
